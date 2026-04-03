@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今天中午吃什么？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 30px;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #333;
+            position: relative;
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            transform: rotate(0deg);
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            background: white;
+            overflow: hidden;
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            z-index: 10;
+            border: 3px solid white;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff4757;
+            z-index: 5;
+        }
+
+        .food-item {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 0 0;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            width: 60px;
+            height: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 2px 4px;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .spin-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .spin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .food-list {
+            margin-bottom: 20px;
+        }
+
+        .food-list h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .food-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .food-input input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .food-input button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .food-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .food-tag {
+            background: #f0f0f0;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .result p {
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .wheel-container {
+                width: 250px;
+                height: 250px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ 今天中午吃什么？</h1>
+        
+        <div class="wheel-container">
+            <div class="wheel" id="wheel">
+                <div class="wheel-center"></div>
+            </div>
+            <div class="pointer"></div>
+        </div>
+
+        <div class="controls">
+            <button class="spin-btn" id="spinBtn" onclick="spinWheel()">开始旋转</button>
+        </div>
+
+        <div class="result" id="result">
+            <h2>🎉 今天就吃这个！</h2>
+            <p id="selectedFood"></p>
+        </div>
+
+        <div class="food-list">
+            <h3>自定义菜品</h3>
+            <div class="food-input">
+                <input type="text" id="newFood" placeholder="输入菜品名称" maxlength="20">
+                <button onclick="addFood()">添加</button>
+            </div>
+            <div class="food-tags" id="foodTags"></div>
+        </div>
+    </div>
+
+    <script>
+        let foods = JSON.parse(localStorage.getItem('customFoods')) || [
+            '麻辣烫', 'KFC', '火锅', '烧烤', '寿司', '披萨', '柠檬鱼', '火烧云'
+        ];
+        let isSpinning = false;
+
+        function saveFoods() {
+            localStorage.setItem('customFoods', JSON.stringify(foods));
+        }
+
+        function renderFoods() {
+            const foodTags = document.getElementById('foodTags');
+            foodTags.innerHTML = '';
+            
+            foods.forEach((food, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'food-tag';
+                tag.innerHTML = `
+                    <span>${food}</span>
+                    <button class="delete-btn" onclick="removeFood(${index})">×</button>
+                `;
+                foodTags.appendChild(tag);
+            });
+            
+            renderWheel();
+        }
+
+        function addFood() {
+            const input = document.getElementById('newFood');
+            const food = input.value.trim();
+            
+            if (food && !foods.includes(food)) {
+                foods.push(food);
+                saveFoods();
+                renderFoods();
+                input.value = '';
+            }
+        }
+
+        function removeFood(index) {
+            if (foods.length > 2) {
+                foods.splice(index, 1);
+                saveFoods();
+                renderFoods();
+            } else {
+                alert('至少需要保留2个菜品！');
+            }
+        }
+
+        function renderWheel() {
+            const wheel = document.getElementById('wheel');
+            wheel.innerHTML = '<div class="wheel-center"></div>';
+            
+            const angleStep = 360 / foods.length;
+            
+            // 创建渐变色饼图
+            const colors = [];
+            for (let i = 0; i < foods.length; i++) {
+                colors.push(`hsl(${i * (360 / foods.length)}, 70%, 80%)`);
+            }
+            
+            let gradient = 'conic-gradient(';
+            foods.forEach((food, index) => {
+                const startAngle = index * angleStep;
+                const endAngle = (index + 1) * angleStep;
+                gradient += `${colors[index]} ${startAngle}deg ${endAngle}deg`;
+                if (index < foods.length - 1) gradient += ', ';
+            });
+            gradient += ')';
+            
+            wheel.style.background = gradient;
+            
+            // 添加菜品标签
+            foods.forEach((food, index) => {
+                const angle = index * angleStep + angleStep / 2;
+                const radians = angle * Math.PI / 180;
+                const labelRadius = 100;
+                const labelX = 150 + labelRadius * Math.cos(radians - Math.PI / 2);
+                const labelY = 150 + labelRadius * Math.sin(radians - Math.PI / 2);
+                
+                const foodItem = document.createElement('div');
+                foodItem.className = 'food-item';
+                foodItem.textContent = food;
+                foodItem.style.left = `${labelX - 30}px`;
+                foodItem.style.top = `${labelY - 7.5}px`;
+                foodItem.style.transform = 'none';
+                foodItem.style.zIndex = '5';
+                
+                wheel.appendChild(foodItem);
+            });
+        }
+
+        function spinWheel() {
+            if (isSpinning || foods.length < 2) return;
+            
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('result').style.display = 'none';
+            
+            const wheel = document.getElementById('wheel');
+            const randomIndex = Math.floor(Math.random() * foods.length);
+            const angleStep = 360 / foods.length;
+            
+            // 重置转盘角度，确保每次都是从0度开始旋转
+            wheel.style.transition = 'none';
+            wheel.style.transform = 'rotate(0deg)';
+            
+            // 强制重排以确保重置生效
+            wheel.offsetHeight;
+            
+            // 恢复过渡效果
+            wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+            
+            // 修正角度计算：指针在顶部(0度)，需要让选中菜品的扇形中心对准指针
+            // 由于转盘是顺时针旋转，而CSS rotate也是顺时针，需要反向计算
+            // 选中菜品的索引对应的角度应该是：- (index * angleStep + angleStep/2)
+            const centerAngle = randomIndex * angleStep + angleStep / 2;
+            const targetAngle = 360 * 5 - centerAngle;
+            
+            wheel.style.transform = `rotate(${targetAngle}deg)`;
+            
+            setTimeout(() => {
+                document.getElementById('selectedFood').textContent = foods[randomIndex];
+                document.getElementById('result').style.display = 'block';
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
+            }, 4000);
+        }
+
+        // 监听回车键
+        document.getElementById('newFood').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addFood();
+            }
+        });
+
+        // 初始化
+        renderFoods();
+    </script>
+</body>
+</html>
