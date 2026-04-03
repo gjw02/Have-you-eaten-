@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>今天中午吃什么？</title>
+    <title>今天吃什么？</title>
     <style>
         * {
             margin: 0;
@@ -100,6 +100,10 @@
             background: rgba(255, 255, 255, 0.8);
             border-radius: 10px;
             padding: 2px 4px;
+            /* 防止文字溢出 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .controls {
@@ -214,6 +218,7 @@
             font-weight: bold;
         }
 
+        /* 优化移动端响应式 */
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -224,15 +229,35 @@
                 height: 250px;
             }
             
+            /* 移动端缩小转盘中心按钮，避免遮挡 */
+            .wheel-center {
+                width: 30px;
+                height: 30px;
+            }
+            
+            /* 移动端适配菜品标签 */
+            .food-item {
+                font-size: 10px;      /* 缩小字体 */
+                width: 50px;          /* 缩小标签宽度 */
+                height: 14px;         /* 缩小标签高度 */
+                padding: 1px 3px;     /* 减少内边距 */
+            }
+            
             h1 {
                 font-size: 2em;
+            }
+
+            /* 移动端按钮适配 */
+            .spin-btn {
+                padding: 12px 30px;
+                font-size: 16px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🍽️ 今天中午吃什么？</h1>
+        <h1>🍽️ 今天吃什么？</h1>
         
         <div class="wheel-container">
             <div class="wheel" id="wheel">
@@ -314,6 +339,10 @@
             wheel.innerHTML = '<div class="wheel-center"></div>';
             
             const angleStep = 360 / foods.length;
+            // 获取转盘当前尺寸（适配移动端）
+            const wheelSize = wheel.offsetWidth;
+            // 移动端标签定位半径适配（按转盘尺寸比例缩放）
+            const labelRadius = wheelSize === 250 ? 85 : 100; 
             
             // 创建渐变色饼图
             const colors = [];
@@ -336,15 +365,16 @@
             foods.forEach((food, index) => {
                 const angle = index * angleStep + angleStep / 2;
                 const radians = angle * Math.PI / 180;
-                const labelRadius = 100;
-                const labelX = 150 + labelRadius * Math.cos(radians - Math.PI / 2);
-                const labelY = 150 + labelRadius * Math.sin(radians - Math.PI / 2);
+                // 按转盘中心定位（适配不同尺寸转盘）
+                const labelX = wheelSize / 2 + labelRadius * Math.cos(radians - Math.PI / 2);
+                const labelY = wheelSize / 2 + labelRadius * Math.sin(radians - Math.PI / 2);
                 
                 const foodItem = document.createElement('div');
                 foodItem.className = 'food-item';
                 foodItem.textContent = food;
-                foodItem.style.left = `${labelX - 30}px`;
-                foodItem.style.top = `${labelY - 7.5}px`;
+                // 标签居中定位（适配标签宽度）
+                foodItem.style.left = `${labelX - (foodItem.offsetWidth || 50) / 2}px`;
+                foodItem.style.top = `${labelY - (foodItem.offsetHeight || 14) / 2}px`;
                 foodItem.style.transform = 'none';
                 foodItem.style.zIndex = '5';
                 
@@ -395,6 +425,9 @@
                 addFood();
             }
         });
+
+        // 监听窗口尺寸变化，重新渲染转盘（适配横竖屏切换）
+        window.addEventListener('resize', renderWheel);
 
         // 初始化
         renderFoods();
